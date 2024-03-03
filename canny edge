@@ -1,0 +1,63 @@
+clc; 
+clear; 
+close all; 
+tic 
+% Image selection process 
+Canny edge detection 
+[file, path] = uigetfile('.jpeg;*.jpg;*.png', 'Pick an Image File'); 
+im = imread(fullfile(path, file)); 
+imshow(im) 
+% Convert image to grayscale and resize 
+im_gray = imresize(rgb2gray(im), 0.3); 
+% Canny edge detection algorithm using built-in 'edge' function 
+canny_out = edge(im_gray, 'Canny', [0.1, 0.2], 0.5); 
+figure; 
+imshow(canny_out); 
+title('Oil Spill Detection using Canny edge detection’); 
+% Hysteresis thresholding 
+J = hysteresis(canny_out, 3, 0.2, 1); 
+% Calculate percentage of oil spill 
+total_pixels = numel(im_gray); 
+oil_spill_pixels = sum(J(:)); 
+oil_spill_percentage = (oil_spill_pixels/total_pixels)*100; 
+%calculate Area of oil spill 
+oil_spill_area = oil_spill_pixels*(0.5^2); 
+%display percentage and area 
+disp(['Oil spill percentage: ' num2str(oil_spill_percentage) '%']); 
+disp(['Oil spill area: ' num2str(oil_spill_area) ' pixels’]); 
+% Show result 
+figure; 
+imshow(J); 
+title('Oil Spill Detection using Canny edge detection with hysteresis’); 
+% Display pop-up window indicating oil spill detection result 
+if oil_spill_percentage > 1 
+msgbox('Yes, oil spill is present.','Oil Spill Detection Result','warn'); 
+else 
+msgbox('Not an oil spill image.','Oil Spill Detection Result','help'); 
+end 
+elapsedTime=toc 
+%   hysteresis 
+function J = hysteresis(I, window_size, Tl, Th) 
+% Thresholding 
+[J, ~, strong_edges] = threshold(I, Tl, Th, 0, 1); 
+% Apply hysteresis 
+se = strel('square', window_size); 
+J = imdilate(J, se); 
+while true 
+old = J; 
+J((J > 0) & (J < 1)) = strong_edges((J > 0) & (J < 1)); 
+if isequal(old, J) 
+break; 
+end 
+end 
+J = J > 0; 
+end 
+% Thresholding 
+function [J, weak_edges, strong_edges] = threshold(I, Tl, Th, weak, strong) 
+J = I; 
+J(J >= Th) = strong; 
+J(J > Tl & J < Th) = weak; 
+J(J <= Tl) = 0; 
+weak_edges = J == weak; 
+strong_edges =J==strong; 
+end
