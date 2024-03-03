@@ -1,0 +1,24 @@
+function cfar_im = oil_spill_detector(im_gray, window_size, guard_size,offset) 
+% Get image size 
+[m, n] = size(im_gray); 
+% Initialize output image 
+cfar_im = zeros(m, n); 
+% Calculate threshold using CFAR algorithm for each pixel 
+for i = 1:m 
+for j = 1:n 
+% Calculate indices for CFAR window 
+row_start = max(1, i - window_size - guard_size); 
+row_end = min(m, i + window_size + guard_size); 
+col_start = max(1, j - window_size - guard_size); 
+col_end = min(n, j + window_size + guard_size);  
+% Extract data within CFAR window 
+data = im_gray(row_start:row_end, col_start:col_end); 
+% Calculate threshold using CFAR algorithm 
+Threshold = mean2(data) + (offset) * std2(data); 
+% Set output image value based on threshold 
+if im_gray(i, j) > threshold 
+cfar_im(i, j) = 255; 
+end 
+end 
+end 
+end 
