@@ -1,0 +1,46 @@
+clc; 
+clear; 
+close all; 
+warning off; 
+tic 
+[img path]=uigetfile('*.jpeg;*.png;*.jpg','select any image'); 
+if path==0 
+warndlg('Not selected image') 
+else 
+I=imread(strcat(path,img)); 
+end 
+figure,imshow(I) 
+title('Input Image') 
+if size(I,3)==3 
+im_gray=rgb2gray(I); 
+else 
+im_gray=I; 
+end 
+figure,imshow(im_gray); 
+title('Gray Color Image'); 
+% Set parameters for CFAR algorithm 
+window_size = 30; 
+guard_size = 2; 
+offset = 1; 
+% Apply CFAR algorithm to detect oil spills 
+cfar_im = oil_spill_detector(im_gray, window_size, guard_size,offset); 
+% Display original image and detected oil spills 
+figure; 
+imshow(cfar_im); 
+title('Oil Spill Detection using CFAR algorithm'); 
+%calculate percentage 
+oil_pixels= nnz(cfar_im); 
+total_pixels= numel(cfar_im); 
+oil_spill_percentage= (oil_pixels /total_pixels) *100; 
+%Display percentage 
+disp(["OilSpillPercentage:" , num2str(oil_spill_percentage), '%']); 
+% Display pop-up window indicating oil spill detection result 
+if oil_spill_percentage > 0 
+msgbox('Yes, oil spill is present.','Oil Spill Detection Result','warn'); 
+else 
+msgbox('Not an oil spill image.','Oil Spill Detection Result','help'); 
+end 
+% Compute area of oil spill 
+spill_area = oil_pixels * (size(cfar_im,1) * size(cfar_im,2)) / total_pixels; 
+disp(['Oil spill area: ' num2str(spill_area) ' pixels']); 
+timeElapsed=toc 
